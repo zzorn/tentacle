@@ -3,15 +3,15 @@ use <roundedBox.scad>;
 use <interpolate.scad>;
 use <bewels.scad>;
 
-$fn=20;
-//$fs=0.6;
-//$fa=2;
+//$fn=20;
+$fs=0.6;
+$fa=2;
 
 mm = 1;
 epsilon = 0.05;
 
-//vertebrae();
-vertebralColumnPieces(1);
+
+vertebralColumnPieces(9);
 
 module vertebralColumnPieces(number = 1,
                              startSize   = 60*mm,
@@ -36,7 +36,6 @@ module vertebralColumnPieces(number = 1,
 module vertebralColumnPiece(relativePos, startSize, maxSize, startHeight, maxHeight) {
   s = lerp(relativePos, startSize, maxSize); 
   h = lerp(relativePos, startHeight, maxHeight); 
-  
   vertebrae(s, h);
 }
 
@@ -63,9 +62,10 @@ module vertebrae(
   spineTopRound = spineRad-holeRad; 
   socketGap = wallSize/4;
   botRounding = 0.25;
+  
 
   difference() {
-  
+
     // Body
     union() {
       // Base 
@@ -77,38 +77,35 @@ module vertebrae(
 
       // Center pillar
       translate([0,0,baseH]) {
-        uniformlyRoundedCylinder(r=spineRad, h=spineHeight, round=spineTopRound, roundBot=false);
+        roundedCylinder(spineRad, spineHeight, botRound=0, topRound=spineTopRound);
       }
     }
 
-    union() {
-      // Center hole
-      translate([0,0,-epsilon])
-        cylinder(r=holeRad, h=height+2*epsilon);
-//      translate([0,0, height-axleTopRound+epsilon])
-//        beweledRing(holeRad-epsilon, axleTopRound, bottom=true);
+    // Center hole
+    translate([0,0,-epsilon])
+      cylinder(r=holeRad, h=height+2*epsilon);
+    translate([0,0, height-axleTopRound+epsilon])
+      beweledRing(holeRad-epsilon, axleTopRound, bottom=true);
 
-      // Ball joint socket
-      translate([0,0,-height+socketDepth])
-        cylinder(r=spineRad+socketGap, h=height);
+    // Ball joint socket
+    translate([0,0,-height+socketDepth])
+      roundedCylinder(spineRad+socketGap, height, botRound=0, topRound=spineTopRound);
+    translate([0,0, socketDepth-epsilon])
+      beweledRing(holeRad-epsilon, socketGap);
 
-      // Holes for section control wires
-      for (a = [0, 90, 180, 270])  
-        rotate([0,0,a+45]) 
-          translate([0,0,baseH - wallSize])
-            rotate([90,0,0]) {
-              cylinder(r=wireHoleSize/2, h=wireHoleDistance);
-            } 
-
-
-    } 
-
+    // Holes for section control wires
+    for (a = [0, 90, 180, 270])  
+      rotate([0,0,a+45]) 
+        translate([0,0,baseH - wallSize])
+          rotate([90,0,0]) {
+            cylinder(r=wireHoleSize/2, h=wireHoleDistance);
+          } 
 
   }
 }
 
 
-module baseProtuberance(angle=0, distance=20, size=30, height=10, wireHoleSize=5, botRounding=0) {
+module baseProtuberance(angle, distance, size, height, wireHoleSize, botRounding) {
   x = cos(angle)*distance;
   y = sin(angle)*distance;
   holeRad = wireHoleSize/2;
@@ -119,7 +116,7 @@ module baseProtuberance(angle=0, distance=20, size=30, height=10, wireHoleSize=5
     union() {
       // Body
       translate([x, y, 0])
-        cylinder(r=size/2, h=height);  
+        roundedCylinder(size/2, height, botRound=height*botRounding);  
   
       /* 
       // Stem
@@ -132,16 +129,16 @@ module baseProtuberance(angle=0, distance=20, size=30, height=10, wireHoleSize=5
     // Hole
     translate([x, y, -epsilon]) 
       cylinder(r=holeRad, h=height+2*epsilon);  
-  //  translate([x, y, height-topRoundingSize+epsilon]) 
-  //    beweledRing(holeRad-epsilon, topRoundingSize, bottom=true);
-//    translate([x, y, -epsilon]) 
-//      beweledRing(holeRad-epsilon, botRoundingSize);
+    translate([x, y, height-topRoundingSize+epsilon]) 
+      beweledRing(holeRad-epsilon, topRoundingSize, bottom=true);
+    translate([x, y, -epsilon]) 
+      beweledRing(holeRad-epsilon, botRoundingSize);
 
   }
 }
 
 
-module tentacleBase(baseH=5, wireHoleDistance=20, protuberanceSize=30, botRounding=0, spineRad=5, spineHeight=10, spineTopRound=5) {
+module tentacleBase(baseH, wireHoleDistance, protuberanceSize, botRounding, spineRad, spineHeight, spineTopRound) {
   cutoutDist = wireHoleDistance/sqrt(2);
   cutoutRad = (sqrt(2)*wireHoleDistance-protuberanceSize)/2;
   baseRad = sqrt(cutoutDist*cutoutDist + cutoutRad*cutoutRad);
@@ -149,8 +146,8 @@ module tentacleBase(baseH=5, wireHoleDistance=20, protuberanceSize=30, botRoundi
   difference() {
     union() {
       cylinder(r=baseRad, h=baseH); //botRound=baseH*botRounding
-//      translate([0,0,baseH])
-//        beweledRing(spineRad-epsilon,min(spineHeight-spineTopRound,cutoutDist/2) );
+      translate([0,0,baseH])
+        beweledRing(spineRad-epsilon,min(spineHeight-spineTopRound,cutoutDist/2) );
     }
 
     // Side cutouts
@@ -167,6 +164,12 @@ module sideCutout(angle, distance, rad, height, botRounding) {
 
   translate([x, y, -epsilon]) 
     cylinder(r=rad-epsilon, h=height+2*epsilon);  
+  translate([x, y, -epsilon]) 
+    beweledRing(rad-epsilon*2, height*botRounding);  
+  translate([x, y, height+epsilon-topRoundingH]) 
+    beweledRing(rad-epsilon*2, topRoundingH, bottom=true);  
+  translate([x, y, height]) 
+    roundedCylinder(rad+topRoundingH+extraTopRound, height*2, topRound=0, botRound=extraTopRound);
 
 }
 

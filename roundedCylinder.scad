@@ -86,4 +86,33 @@ module quartCircle(x, y, r, top) {
     }
 }
 
+module uniformlyRoundedCylinder(r=1, h=1, round=0.5, roundTop = true, roundBot=true) {
+  topOffs = roundTop ? round : 0;
+  botOffs = roundBot ? round : 0;
+  
+  union() {
+    // Top and bottom surface
+    cylinder(r=r-round, h=h);
+    
+    // Outer center surface
+    translate([0,0,botOffs]) cylinder(r=r, h=h-botOffs-topOffs);
+    
+    // Top torus
+    if (roundTop) {
+      translate([0,0,h-topOffs]) torus(r-round, round);
+    }     
+
+    // Bot torus
+    if (roundBot) {
+      translate([0,0,botOffs]) torus(r-round, round);
+    }      
+  } 
+}
+
+
+module torus(r=10, tr=2) {
+  rotate_extrude(convexity=4) 
+    translate([r,0,0]) 
+      circle(tr);
+}
 

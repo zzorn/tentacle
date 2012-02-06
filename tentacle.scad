@@ -90,7 +90,7 @@ module vertebrae(
 
       // Ball joint socket
       translate([0,0,-height+socketDepth])
-        cylinder(r=spineRad+socketGap, h=height);
+       uniformlyRoundedCylinder(r=spineRad+socketGap, h=height, round=spineTopRound+socketGap, roundBot=false);
 
       // Holes for section control wires
       for (a = [0, 90, 180, 270])  

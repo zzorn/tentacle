@@ -11,7 +11,7 @@ mm = 1;
 epsilon = 0.05;
 
 //vertebrae();
-vertebralColumnPieces(1);
+vertebralColumnPieces(4);
 
 module vertebralColumnPieces(number = 1,
                              startSize   = 60*mm,
@@ -19,7 +19,7 @@ module vertebralColumnPieces(number = 1,
                              startHeight = 20*mm,
                              endHeight   = 17*mm) {
 
-  separation = 1 * max(startSize, endSize) + 2*mm;
+  separation = 0.95 * max(startSize, endSize) + 2*mm;
   numPerSize = round(sqrt(number));
 
   for (x = [0:numPerSize-1]) {
@@ -95,7 +95,7 @@ module vertebrae(
       // Holes for section control wires
       for (a = [0, 90, 180, 270])  
         rotate([0,0,a+45]) 
-          translate([0,0,baseH - wallSize])
+          translate([0,0,baseH/2 ])
             rotate([90,0,0]) {
               cylinder(r=wireHoleSize/2, h=wireHoleDistance);
             } 
@@ -119,7 +119,7 @@ module baseProtuberance(angle=0, distance=20, size=30, height=10, wireHoleSize=5
     union() {
       // Body
       translate([x, y, 0])
-        cylinder(r=size/2, h=height);  
+        uniformlyRoundedCylinder(r=size/2, h=height, roundBot=false, round=size/8, roundTop=false);
   
       /* 
       // Stem
